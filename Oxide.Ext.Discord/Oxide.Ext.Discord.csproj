@@ -37,6 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Attributes\DiscordClientAttribute.cs" />
+    <Compile Include="ClientState.cs" />
     <Compile Include="Discord.cs" />
     <Compile Include="DiscordEvents\GuildBan.cs" />
     <Compile Include="DiscordEvents\GuildMemberAdd.cs" />
@@ -107,7 +108,7 @@
     <Compile Include="Exceptions\SettingsNullException.cs" />
     <Compile Include="Exceptions\SocketRunningException.cs" />
     <Compile Include="Gateway\Connect.cs" />
-    <Compile Include="Gateway\OpCodes.cs" />
+    <Compile Include="Gateway\OpCode.cs" />
     <Compile Include="Gateway\RPayload.cs" />
     <Compile Include="Helpers\CreationTime.cs" />
     <Compile Include="Helpers\HttpUtility.cs" />

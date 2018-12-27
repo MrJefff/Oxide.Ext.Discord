@@ -1,10 +1,9 @@
 ﻿namespace Oxide.Ext.Discord.REST
 {
-    using System;
+    using Oxide.Ext.Discord.Helpers;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
-    using Oxide.Ext.Discord.Helpers;
 
     public class Bucket : List<Request>
     {
@@ -26,8 +25,8 @@
 
         public Bucket(RequestMethod method, string route)
         {
-            this.Method = method;
-            this.Route = route;
+            Method = method;
+            Route = route;
 
             thread = new Thread(() => RunThread());
             thread.Start();
@@ -41,11 +40,11 @@
 
         public void Queue(Request request)
         {
-            this.Add(request);
+            Add(request);
 
-            if (!this.Initialized)
+            if (!Initialized)
             {
-                this.Initialized = true;
+                Initialized = true;
             }
         }
 
@@ -54,38 +53,44 @@
             // 'Initialized' basically allows us to start the while
             // loop from the constructor even when this.Count = 0
             // (eg after the bucket is created, before requests are added)
-            while (!Initialized || (this.Count > 0))
+            while (!Initialized || (Count > 0))
             {
-                if (Disposed) break;
+                if (Disposed)
+                {
+                    break;
+                }
 
-                if (!Initialized) continue;
+                if (!Initialized)
+                {
+                    continue;
+                }
 
                 FireRequests();
             }
 
-            this.Disposed = true;
+            Disposed = true;
         }
 
         private void FireRequests()
         {
             ////this.CleanRequests();
-            
+
             if (GlobalRateLimit.Hit)
             {
                 return;
             }
-            
+
             if (Remaining == 0 && Reset >= Time.TimeSinceEpoch())
             {
                 return;
             }
-            
+
             if (this.Any(x => x.InProgress))
             {
                 return;
             }
 
-            var nextItem = this.First();
+            Request nextItem = this.First();
             nextItem.Fire(this);
         }
 

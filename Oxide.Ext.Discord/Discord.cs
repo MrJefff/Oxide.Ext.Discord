@@ -21,7 +21,7 @@
                 throw new APIKeyException();
             }
 
-            var settings = new DiscordSettings()
+            DiscordSettings settings = new DiscordSettings()
             {
                 ApiToken = apiKey
             };
@@ -47,17 +47,12 @@
             }
 
             // Find an existing DiscordClient and update it 
-            var client = Clients.FirstOrDefault(x => x.Plugins.Any(p => p.Title == plugin.Title));
+            DiscordClient client = Clients.FirstOrDefault(x => x.Settings.ApiToken == settings.ApiToken);
             if (client != null)
             {
-                if (client.Settings.ApiToken != settings.ApiToken)
-                {
-                    throw new LimitedClientException();
-                }
+                client.Plugins.Where(x => x.Title == plugin.Title).ToList().ForEach(x => client.Plugins.Remove(x));
 
-                var existingPlugins = client.Plugins.Where(x => x.Title == plugin.Title).ToList();
-                existingPlugins.ForEach(x => client.Plugins.Remove(x));
-
+                client.Plugins.Remove(plugin);
                 client.RegisterPlugin(plugin);
                 client.UpdatePluginReference(plugin);
                 client.Settings = settings;
@@ -66,7 +61,7 @@
             }
 
             // Create a new DiscordClient
-            var newClient = new DiscordClient();
+            DiscordClient newClient = new DiscordClient();
             Clients.Add(newClient);
             newClient.Initialize(plugin, settings);
         }
