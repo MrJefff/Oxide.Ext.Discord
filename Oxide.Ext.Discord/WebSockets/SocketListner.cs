@@ -52,8 +52,6 @@ namespace Oxide.Ext.Discord.WebSockets
 
             }
 
-            Interface.Oxide.LogWarning($"[Discord Ext] Discord connection closed uncleanly: code {e.Code}, Reason: {e.Reason}");
-
             if (!Interface.Oxide.IsShuttingDown && client.ClientState != ClientState.DISCONNECTED)
             {
                 if (!webSocket.reconenctThread.IsAlive)

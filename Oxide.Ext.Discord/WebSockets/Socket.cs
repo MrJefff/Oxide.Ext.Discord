@@ -33,7 +33,6 @@
 
         internal void Reconnect()
         {
-            Console.WriteLine("Reconnect!");
             lock (_lock)
             Thread.Sleep(3000);
             Connect();

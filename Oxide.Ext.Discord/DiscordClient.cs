@@ -80,7 +80,6 @@ namespace Oxide.Ext.Discord
                 WSSURL = url;
                 _webSocket = new Socket(this);
                 _webSocket.Connect();
-                Console.BackgroundColor = ConsoleColor.Blue;
             });
         }
 
