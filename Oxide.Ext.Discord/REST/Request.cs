@@ -1,14 +1,14 @@
 ﻿namespace Oxide.Ext.Discord.REST
 {
+    using Newtonsoft.Json;
+    using Oxide.Core;
+    using Oxide.Core.Libraries;
+    using Oxide.Ext.Discord.DiscordObjects;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Net;
     using System.Text;
-    using Newtonsoft.Json;
-    using Oxide.Core;
-    using Oxide.Core.Libraries;
-    using Oxide.Ext.Discord.DiscordObjects;
 
     public class Request
     {
@@ -40,33 +40,33 @@
 
         public Request(RequestMethod method, string route, string endpoint, Dictionary<string, string> headers, object data, Action<RestResponse> callback)
         {
-            this.Method = method;
-            this.Route = route;
-            this.Endpoint = endpoint;
-            this.Headers = headers;
-            this.Data = data;
-            this.Callback = callback;
+            Method = method;
+            Route = route;
+            Endpoint = endpoint;
+            Headers = headers;
+            Data = data;
+            Callback = callback;
         }
 
         public void Fire(Bucket bucket)
         {
             this.bucket = bucket;
-            this.InProgress = true;
-            this.StartTime = DateTime.UtcNow;
+            InProgress = true;
+            StartTime = DateTime.UtcNow;
 
-            var req = WebRequest.Create(RequestURL);
+            WebRequest req = WebRequest.Create(RequestURL);
             req.Method = Method.ToString();
             req.ContentType = "application/json";
             req.Timeout = 5000;
 
-            if (this.Headers != null)
+            if (Headers != null)
             {
-                req.SetRawHeaders(this.Headers);
+                req.SetRawHeaders(Headers);
             }
 
-            if (this.Data != null)
+            if (Data != null)
             {
-                WriteRequestData(req, this.Data);
+                WriteRequestData(req, Data);
             }
             else
             {
@@ -81,19 +81,18 @@
             }
             catch (WebException ex)
             {
-                var httpResponse = ex.Response as HttpWebResponse;
 
-                if (httpResponse == null)
+                if (!(ex.Response is HttpWebResponse httpResponse))
                 {
                     Interface.Oxide.LogException($"[Discord Ext] A web request exception occured (internal error).", ex);
                     Interface.Oxide.LogError($"[Discord Ext] Request URL: [{Method.ToString()}] {RequestURL}");
                     Interface.Oxide.LogError($"[Discord Ext] Exception message: {ex.Message}");
 
-                    this.Close(false);
+                    Close(false);
                     return;
                 }
 
-                string message = this.ParseResponse(ex.Response);
+                string message = ParseResponse(ex.Response);
 
                 Interface.Oxide.LogWarning($"[Discord Ext] An error occured whilst submitting a request to {req.RequestUri} (code {httpResponse.StatusCode}): {message}");
 
@@ -105,16 +104,16 @@
                 httpResponse.Close();
 
                 bool shouldRemove = (int)httpResponse.StatusCode != 429;
-                this.Close(shouldRemove);
+                Close(shouldRemove);
 
                 return;
             }
 
-            this.ParseResponse(response);
+            ParseResponse(response);
 
             try
             {
-                Callback?.Invoke(this.Response);
+                Callback?.Invoke(Response);
             }
             catch (Exception ex)
             {
@@ -122,7 +121,7 @@
             }
             finally
             {
-                this.Close();
+                Close();
             }
         }
 
@@ -130,17 +129,20 @@
         {
             if (remove)
             {
-                this.bucket.Remove(this);
+                bucket.Remove(this);
             }
 
-            this.InProgress = false;
+            InProgress = false;
         }
 
         public bool HasTimedOut()
         {
-            if (!this.InProgress || StartTime == null) return false;
+            if (!InProgress || StartTime == null)
+            {
+                return false;
+            }
 
-            var timeSpan = DateTime.UtcNow - StartTime;
+            TimeSpan? timeSpan = DateTime.UtcNow - StartTime;
 
             return timeSpan.HasValue && (timeSpan.Value.TotalSeconds > RequestMaxLength);
         }
@@ -155,7 +157,7 @@
             byte[] bytes = Encoding.UTF8.GetBytes(contents);
             request.ContentLength = bytes.Length;
 
-            using (var stream = request.GetRequestStream())
+            using (Stream stream = request.GetRequestStream())
             {
                 stream.Write(bytes, 0, bytes.Length);
             }
@@ -164,14 +166,14 @@
         private string ParseResponse(WebResponse response)
         {
             string message;
-            using (var reader = new StreamReader(response.GetResponseStream()))
+            using (StreamReader reader = new StreamReader(response.GetResponseStream()))
             {
                 message = reader.ReadToEnd().Trim();
             }
 
-            this.Response = new RestResponse(message);
+            Response = new RestResponse(message);
 
-            this.ParseHeaders(response.Headers, this.Response);
+            ParseHeaders(response.Headers, Response);
 
             return message;
         }
@@ -187,7 +189,7 @@
                 bool.TryParse(rateLimitGlobalHeader, out bool rateLimitGlobal) &&
                 rateLimitGlobal)
             {
-                var limit = response.ParseData<RateLimit>();
+                RateLimit limit = response.ParseData<RateLimit>();
 
                 if (limit.global)
                 {

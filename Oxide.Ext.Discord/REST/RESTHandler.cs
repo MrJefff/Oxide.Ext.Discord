@@ -6,17 +6,17 @@
 
     public class RESTHandler
     {
-        private List<Bucket> buckets = new List<Bucket>();
+        private readonly List<Bucket> buckets = new List<Bucket>();
 
-        private string apiKey;
+        private readonly string apiKey;
 
-        private Dictionary<string, string> headers;
+        public Dictionary<string, string> Headers { get; set; }
 
         public RESTHandler(string apiKey)
         {
             this.apiKey = apiKey;
 
-            headers = new Dictionary<string, string>()
+            Headers = new Dictionary<string, string>()
             {
                 { "Authorization", $"Bot {this.apiKey}" },
                 { "Content-Type", "application/json" }
@@ -34,12 +34,12 @@
 
         public void DoRequest(string url, RequestMethod method, object data, Action callback)
         {
-            CreateRequest(method, url, headers, data, response => callback?.Invoke());
+            CreateRequest(method, url, Headers, data, response => callback?.Invoke());
         }
 
         public void DoRequest<T>(string url, RequestMethod method, object data, Action<T> callback)
         {
-            CreateRequest(method, url, headers, data, response =>
+            CreateRequest(method, url, Headers, data, response =>
             {
                 callback?.Invoke(response.ParseData<T>());
             });

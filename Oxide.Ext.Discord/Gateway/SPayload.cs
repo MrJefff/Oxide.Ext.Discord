@@ -2,12 +2,12 @@
 {
     using Newtonsoft.Json;
 
-    public class SPayload
+    public class SPayload<T>
     {
         [JsonProperty("op")]
-        public OpCodes OP;
+        public OpCode OpCode { get; set; }
 
         [JsonProperty("d")]
-        public object Payload;
+        public T Data { get; set; }
     }
 }

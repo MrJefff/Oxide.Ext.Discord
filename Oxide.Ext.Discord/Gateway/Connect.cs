@@ -2,7 +2,7 @@
 {
     using Newtonsoft.Json;
 
-    class Connect
+    public class Connect
     {
         [JsonProperty("v")]
         public static int Version { get; } = 6;
