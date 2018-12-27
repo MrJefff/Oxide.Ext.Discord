@@ -56,6 +56,7 @@
 
             WebRequest req = WebRequest.Create(RequestURL);
             req.Method = Method.ToString();
+            req.ContentType = "application/json";
             req.Timeout = 5000;
 
             if (Headers != null)
@@ -67,6 +68,11 @@
             {
                 WriteRequestData(req, Data);
             }
+            else
+            {
+                req.ContentLength = 0;
+            }
+
 
             HttpWebResponse response;
             try
@@ -148,7 +154,7 @@
                 NullValueHandling = NullValueHandling.Ignore
             });
 
-            byte[] bytes = Encoding.ASCII.GetBytes(contents);
+            byte[] bytes = Encoding.UTF8.GetBytes(contents);
             request.ContentLength = bytes.Length;
 
             using (Stream stream = request.GetRequestStream())

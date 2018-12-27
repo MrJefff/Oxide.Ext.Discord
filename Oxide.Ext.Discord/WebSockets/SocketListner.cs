@@ -61,6 +61,12 @@ namespace Oxide.Ext.Discord.WebSockets
                     webSocket.reconenctThread.Start();
                 }
             }
+            else
+            {
+                client.Disconnect();
+                Discord.CloseClient(client);
+            }
+            
 
             client.CallHook("DiscordSocket_WebSocketClosed", null, e.Reason, e.Code, e.WasClean);
         }
