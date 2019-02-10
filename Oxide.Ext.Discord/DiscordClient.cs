@@ -15,6 +15,7 @@ namespace Oxide.Ext.Discord
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using System.Timers;
 
     public class DiscordClient
@@ -35,7 +36,7 @@ namespace Oxide.Ext.Discord
 
         private Socket _webSocket;
 
-        private Timer _timer;
+        private Thread _heartbeat;
 
         private double _lastHeartbeat;
 
@@ -66,7 +67,7 @@ namespace Oxide.Ext.Discord
 
             if (_webSocket != null && _webSocket.IsAlive)
             {
-                return;
+                throw new SocketRunningException(this);
             }
 
             if (!string.IsNullOrEmpty(WSSURL))
@@ -77,7 +78,6 @@ namespace Oxide.Ext.Discord
 
             GetURL(url =>
             {
-                WSSURL = url;
                 _webSocket = new Socket(this);
                 _webSocket.Connect();
             });
@@ -86,6 +86,7 @@ namespace Oxide.Ext.Discord
         public void Disconnect()
         {
             ClientState = ClientState.DISCONNECTED;
+            _heartbeat.Abort();
             _webSocket?.Disconnect();
             REST?.Shutdown();
         }
@@ -153,34 +154,22 @@ namespace Oxide.Ext.Discord
 
         public string GetPluginNames(string delimiter = ", ") => string.Join(delimiter, Plugins.Select(x => x.Name).ToArray());
 
-        public void CreateHeartbeat(float heartbeatInterval)
+        public void StartHeartbeatThread(int heartbeatInterval)
         {
-            if (_timer != null)
+            if (_heartbeat.IsAlive)
             {
-                _timer.Interval = heartbeatInterval;
-                return;
+                throw new ThreadRunningException(_heartbeat);
             }
-
-            _lastHeartbeat = Time.TimeSinceEpoch();
-
-            _timer = new Timer()
+            _heartbeat = new Thread(new ThreadStart(() =>
             {
-                Interval = heartbeatInterval
-            };
-            _timer.Elapsed += HeartbeatElapsed;
-            _timer.Start();
-        }
-
-        private void HeartbeatElapsed(object sender, ElapsedEventArgs e)
-        {
-            if (!_webSocket.IsAlive || _webSocket.IsClosed)
-            {
-                _timer.Dispose();
-                _timer = null;
-                return;
-            }
-
-            SendHeartbeat();
+                while (true)
+                {
+                    Thread.Sleep(heartbeatInterval * 1000);
+                    SendHeartbeat();
+                }
+            }));
+            _heartbeat.Name = "Heartbeat-Thread";
+            _heartbeat.Start();
         }
 
         private void GetURL(Action<string> callback)
@@ -194,6 +183,8 @@ namespace Oxide.Ext.Discord
                 {
                     Interface.Oxide.LogDebug($"Got Gateway url: {fullURL}");
                 }
+
+                WSSURL = fullURL;
 
                 callback.Invoke(fullURL);
             });
@@ -250,7 +241,7 @@ namespace Oxide.Ext.Discord
             _webSocket.Send(payload);
         }
 
-        public void SendHeartbeat()
+        internal void SendHeartbeat()
         {
             SPayload<double> packet = new SPayload<double>()
             {
@@ -267,7 +258,7 @@ namespace Oxide.Ext.Discord
 
             if (Settings.Debugging)
             {
-                Interface.Oxide.LogDebug($"Heartbeat sent - {_timer.Interval}ms interval.");
+                Interface.Oxide.LogDebug($"Heartbeat sent!");
             }
         }
 

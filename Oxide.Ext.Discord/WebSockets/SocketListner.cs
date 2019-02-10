@@ -1,13 +1,13 @@
 namespace Oxide.Ext.Discord.WebSockets
 {
-    using System;
-    using System.Linq;
     using Newtonsoft.Json;
     using Oxide.Core;
     using Oxide.Ext.Discord.DiscordEvents;
     using Oxide.Ext.Discord.DiscordObjects;
     using Oxide.Ext.Discord.Exceptions;
     using Oxide.Ext.Discord.Gateway;
+    using System;
+    using System.Linq;
     using WebSocketSharp;
 
     public class SocketListner
@@ -54,17 +54,14 @@ namespace Oxide.Ext.Discord.WebSockets
 
             if (!Interface.Oxide.IsShuttingDown && client.ClientState != ClientState.DISCONNECTED)
             {
-                if (!webSocket.reconenctThread.IsAlive)
-                {
-                    webSocket.reconenctThread.Start();
-                }
+                webSocket.Reconnect();
             }
             else
             {
                 client.Disconnect();
                 Discord.CloseClient(client);
             }
-            
+
 
             client.CallHook("DiscordSocket_WebSocketClosed", null, e.Reason, e.Code, e.WasClean);
         }
@@ -371,7 +368,7 @@ namespace Oxide.Ext.Discord.WebSockets
 
                                     if (updatedPresence != null)
                                     {
-                                        var updatedMember = client.DiscordServer.members.FirstOrDefault(x => x.user.id == updatedPresence.id);
+                                        GuildMember updatedMember = client.DiscordServer.members.FirstOrDefault(x => x.user.id == updatedPresence.id);
 
                                         if (updatedMember != null)
                                         {
@@ -464,7 +461,7 @@ namespace Oxide.Ext.Discord.WebSockets
                 case OpCode.Hello:
                     {
                         Hello hello = payload.ToObject<Hello>();
-                        client.CreateHeartbeat(hello.HeartbeatInterval);
+                        client.StartHeartbeatThread(hello.HeartbeatInterval);
 
                         // Client should now perform identification
                         client.Identify();

@@ -1,8 +1,8 @@
 ﻿namespace Oxide.Ext.Discord.WebSockets
 {
+    using Oxide.Ext.Discord.Exceptions;
     using System;
     using System.Threading;
-    using Oxide.Ext.Discord.Exceptions;
     using WebSocketSharp;
 
     public class Socket
@@ -11,32 +11,50 @@
 
         private readonly WebSocket socket;
 
-        private readonly SocketListner listner;
+        private SocketListner listner;
+
+        private int reconnectAttempts = 0;
 
         public Socket(DiscordClient client)
         {
             this.client = client;
-            socket = new WebSocket(client.WSSURL);
+            socket = InitializeSocket();
+        }
+
+        protected internal WebSocket InitializeSocket()
+        {
+            WebSocket socket = new WebSocket(client.WSSURL);
             listner = new SocketListner(client, this);
 
             socket.OnOpen += listner.SocketOpened;
             socket.OnClose += listner.SocketClosed;
             socket.OnError += listner.SocketErrored;
             socket.OnMessage += listner.SocketMessage;
-            reconenctThread = new Thread(Reconnect);
+
+            return socket;
         }
 
-        public Thread reconenctThread;
 
 
         public object _lock = new object();
 
         internal void Reconnect()
         {
-            lock (_lock)
-            Thread.Sleep(3000);
-            Connect();
-            reconenctThread.Abort();
+            if (IsClosed)
+            {
+                throw new SocketReconnectException();
+            }
+
+            int time = (reconnectAttempts > 100 ? 60 : 3) * 1000;
+
+            reconnectAttempts++;
+
+            Thread thread = new Thread(() =>
+            {
+                Thread.Sleep(time);
+                Connect();
+            });
+            thread.Start();
         }
 
         public void Connect()
@@ -50,26 +68,23 @@
 
         public void Disconnect()
         {
-            if (IsClosed) return;
+            if (IsClosed)
+            {
+                return;
+            }
 
             socket?.CloseAsync();
         }
 
-        public void Send(string message, Action<bool> completed = null) => socket?.SendAsync(message, completed);
-
-        public bool IsAlive
+        public void Send(string message, Action<bool> completed = null)
         {
-            get => socket?.IsAlive ?? false;
+            socket?.SendAsync(message, completed);
         }
 
-        public bool IsClosing
-        {
-            get => socket?.ReadyState == WebSocketState.Closing;
-        }
+        public bool IsAlive => socket?.IsAlive ?? false;
 
-        public bool IsClosed
-        {
-            get => socket?.ReadyState == WebSocketState.Closed;
-        }
+        public bool IsClosing => socket?.ReadyState == WebSocketState.Closing;
+
+        public bool IsClosed => socket?.ReadyState == WebSocketState.Closed;
     }
 }

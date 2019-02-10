@@ -50,6 +50,8 @@
     <Compile Include="DiscordObjects\Resume.cs" />
     <Compile Include="DiscordObjects\StatusTypes.cs" />
     <Compile Include="DiscordObjects\VoiceStateUpdate.cs" />
+    <Compile Include="Exceptions\SocketReconnectException.cs" />
+    <Compile Include="Exceptions\ThreadRunningException.cs" />
     <Compile Include="Gateway\SPayload.cs" />
     <Compile Include="DiscordEvents\TypingStart.cs" />
     <Compile Include="DiscordEvents\VoiceServerUpdate.cs" />

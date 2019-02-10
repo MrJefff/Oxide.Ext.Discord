@@ -28,7 +28,7 @@
             Method = method;
             Route = route;
 
-            thread = new Thread(() => RunThread());
+            thread = new Thread(RunThread);
             thread.Start();
         }
 
