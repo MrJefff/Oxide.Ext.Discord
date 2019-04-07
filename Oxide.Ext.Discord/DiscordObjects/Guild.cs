@@ -76,27 +76,27 @@
                 { "channels", channels }
             };
 
-            client.REST.DoRequest($"/guilds", RequestMethod.POST, jsonObj, callback);
+            client.Rest.DoRequest($"/guilds", RequestMethod.POST, jsonObj, callback);
         }
 
         public static void GetGuild(DiscordClient client, string guildID, Action<Guild> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{guildID}", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{guildID}", RequestMethod.GET, null, callback);
         }
 
         public void ModifyGuild(DiscordClient client, Action<Guild> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}", RequestMethod.PATCH, this, callback);
+            client.Rest.DoRequest($"/guilds/{id}", RequestMethod.PATCH, this, callback);
         }
 
         public void DeleteGuild(DiscordClient client, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}", RequestMethod.DELETE, null, callback);
         }
 
         public void GetGuildChannels(DiscordClient client, Action<List<Channel>> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/channels", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/channels", RequestMethod.GET, null, callback);
         }
 
         public void CreateGuildChannel(DiscordClient client, Channel channel, Action<Channel> callback = null) => CreateGuildChannel(client, channel.name, channel.type, channel.bitrate, channel.user_limit, channel.permission_overwrites, callback);
@@ -112,23 +112,23 @@
                 { "permission_overwrites", permissionOverwrites }
             };
 
-            client.REST.DoRequest($"/guilds/{id}/channels", RequestMethod.POST, jsonObj, callback);
+            client.Rest.DoRequest($"/guilds/{id}/channels", RequestMethod.POST, jsonObj, callback);
         }
 
         public void ModifyGuildChannelPositions(DiscordClient client, List<ObjectPosition> positions, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/channels", RequestMethod.PATCH, positions, callback);
+            client.Rest.DoRequest($"/guilds/{id}/channels", RequestMethod.PATCH, positions, callback);
         }
 
         public void GetGuildMember(DiscordClient client, string userID, Action<GuildMember> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.GET, null, callback);
         }
 
         public void ListGuildMembers(DiscordClient client, Action<List<GuildMember>> callback = null, int limit = 1000, ulong after = 0)
         {
             string @params = string.Format("?limit={0}{1}", limit, after != 0 ? $"&after={after}" : "");
-            client.REST.DoRequest($"/guilds/{id}/members{@params}", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/members{@params}", RequestMethod.GET, null, callback);
         }
 
         public void AddGuildMember(DiscordClient client, GuildMember member, string accessToken, List<Role> roles, Action<GuildMember> callback = null) => this.AddGuildMember(client, member.user.id, accessToken, member.nick, roles, member.mute, member.deaf, callback);
@@ -144,7 +144,7 @@
                 { "deaf", deaf }
             };
 
-            client.REST.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.PUT, jsonObj, callback);
+            client.Rest.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.PUT, jsonObj, callback);
         }
 
         public void ModifyGuildMember(DiscordClient client, GuildMember member, List<string> roles, string channelId, Action callback = null) => this.ModifyGuildMember(client, member.user.id, member.nick, roles, member.deaf, member.mute, channelId, callback);
@@ -160,7 +160,7 @@
                 { "channel_id", channelId }
             };
 
-            client.REST.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.PATCH, jsonObj, callback);
+            client.Rest.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.PATCH, jsonObj, callback);
         }
 
         public void ModifyCurrentUsersNick(DiscordClient client, string nick, Action<string> callback = null)
@@ -170,50 +170,50 @@
                 { "nick", nick }
             };
 
-            client.REST.DoRequest($"/guilds/{id}/members/@me/nick", RequestMethod.PATCH, jsonObj, callback);
+            client.Rest.DoRequest($"/guilds/{id}/members/@me/nick", RequestMethod.PATCH, jsonObj, callback);
         }
 
         public void AddGuildMemberRole(DiscordClient client, User user, Role role, Action callback = null) => AddGuildMemberRole(client, user.id, role.id, callback);
 
         public void AddGuildMemberRole(DiscordClient client, string userID, string roleID, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/members/{userID}/roles/{roleID}", RequestMethod.PUT, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/members/{userID}/roles/{roleID}", RequestMethod.PUT, null, callback);
         }
 
         public void RemoveGuildMemberRole(DiscordClient client, User user, Role role, Action callback = null) => RemoveGuildMemberRole(client, user.id, role.id, callback);
 
         public void RemoveGuildMemberRole(DiscordClient client, string userID, string roleID, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/members/{userID}/roles/{roleID}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/members/{userID}/roles/{roleID}", RequestMethod.DELETE, null, callback);
         }
 
         public void RemoveGuildMember(DiscordClient client, GuildMember member, Action callback = null) => RemoveGuildMember(client, member.user.id, callback);
 
         public void RemoveGuildMember(DiscordClient client, string userID, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.DELETE, null, callback);
         }
 
         public void GetGuildBans(DiscordClient client, Action<List<Ban>> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/bans", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/bans", RequestMethod.GET, null, callback);
         }
 
         public void CreateGuildBan(DiscordClient client, GuildMember member, string reason, int? deleteMessageDays, Action callback = null) => CreateGuildBan(client, member.user.id, reason, deleteMessageDays, callback);
 
         public void CreateGuildBan(DiscordClient client, string userID, string reason, int? deleteMessageDays, Action callback = null)
         {
-            client.REST.DoRequest(string.Format("/guilds/{0}/bans/{1}?reason={2}&delete-message-days={3}", id, userID, reason, deleteMessageDays.Value), RequestMethod.PUT, null, callback);
+            client.Rest.DoRequest(string.Format("/guilds/{0}/bans/{1}?reason={2}&delete-message-days={3}", id, userID, reason, deleteMessageDays.Value), RequestMethod.PUT, null, callback);
         }
 
         public void RemoveGuildBan(DiscordClient client, string userID, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/bans/{userID}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/bans/{userID}", RequestMethod.DELETE, null, callback);
         }
 
         public void GetGuildRoles(DiscordClient client, Action<List<Role>> callback = null)
         {
-            client.REST.DoRequest<List<Role>>($"/guilds/{id}/roles", RequestMethod.GET, null, (returnValue) =>
+            client.Rest.DoRequest<List<Role>>($"/guilds/{id}/roles", RequestMethod.GET, null, (returnValue) =>
             {
                 callback?.Invoke(returnValue as List<Role>);
             });
@@ -221,19 +221,19 @@
 
         public void CreateGuildRole(DiscordClient client, Role role, Action<Role> callback = null)
         {
-            client.REST.DoRequest<Role>($"/guilds/{id}/roles", RequestMethod.POST, role, callback);
+            client.Rest.DoRequest<Role>($"/guilds/{id}/roles", RequestMethod.POST, role, callback);
         }
 
         public void ModifyGuildRolePositions(DiscordClient client, List<ObjectPosition> positions, Action<List<Role>> callback = null)
         {
-            client.REST.DoRequest<List<Role>>($"/guilds/{id}/roles", RequestMethod.PATCH, positions, callback);
+            client.Rest.DoRequest<List<Role>>($"/guilds/{id}/roles", RequestMethod.PATCH, positions, callback);
         }
 
         public void ModifyGuildRole(DiscordClient client, Role role, Action<Role> callback = null) => ModifyGuildRole(client, role.id, role, callback);
 
         public void ModifyGuildRole(DiscordClient client, string roleID, Role role, Action<Role> callback = null)
         {
-            client.REST.DoRequest<Role>($"/guilds/{id}/roles/{roleID}", RequestMethod.PATCH, role, (returnValue) =>
+            client.Rest.DoRequest<Role>($"/guilds/{id}/roles/{roleID}", RequestMethod.PATCH, role, (returnValue) =>
             {
                 callback?.Invoke(returnValue as Role);
             });
@@ -243,12 +243,12 @@
 
         public void DeleteGuildRole(DiscordClient client, string roleID, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/roles/{roleID}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/roles/{roleID}", RequestMethod.DELETE, null, callback);
         }
 
         public void GetGuildPruneCount(DiscordClient client, int? days, Action<int?> callback = null)
         {
-            client.REST.DoRequest<JObject>($"/guilds/{id}/prune?days={days}", RequestMethod.GET, null, (returnValue) =>
+            client.Rest.DoRequest<JObject>($"/guilds/{id}/prune?days={days}", RequestMethod.GET, null, (returnValue) =>
             {
                 var pruned = returnValue.GetValue("pruned").ToObject<int?>();
 
@@ -258,7 +258,7 @@
 
         public void BeginGuildPrune(DiscordClient client, int? days, Action<int?> callback = null)
         {
-            client.REST.DoRequest<JObject>($"/guilds/{id}/prune?days={days}", RequestMethod.POST, null, (returnValue) =>
+            client.Rest.DoRequest<JObject>($"/guilds/{id}/prune?days={days}", RequestMethod.POST, null, (returnValue) =>
             {
                 var pruned = returnValue.GetValue("pruned").ToObject<int?>();
 
@@ -268,17 +268,17 @@
 
         public void GetGuildVoiceRegions(DiscordClient client, Action<List<VoiceRegion>> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/regions", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/regions", RequestMethod.GET, null, callback);
         }
 
         public void GetGuildInvites(DiscordClient client, Action<List<Invite>> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/invites", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/invites", RequestMethod.GET, null, callback);
         }
 
         public void GetGuildIntegrations(DiscordClient client, Action<List<Integration>> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/integrations", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/integrations", RequestMethod.GET, null, callback);
         }
 
         public void CreateGuildIntegration(DiscordClient client, Integration integration, Action callback = null) => CreateGuildIntegration(client, integration.type, integration.id, callback);
@@ -291,7 +291,7 @@
                 { "id", id }
             };
 
-            client.REST.DoRequest($"/guilds/{id}/integrations", RequestMethod.POST, jsonObj, callback);
+            client.Rest.DoRequest($"/guilds/{id}/integrations", RequestMethod.POST, jsonObj, callback);
         }
 
         public void ModifyGuildIntegration(DiscordClient client, Integration integration, bool? enableEmoticons, Action callback = null) => ModifyGuildIntegration(client, integration.id, integration.expire_behaviour, integration.expire_grace_peroid, enableEmoticons, callback);
@@ -305,31 +305,31 @@
                 { "enable_emoticons", enableEmoticons }
             };
 
-            client.REST.DoRequest($"/guilds/{id}/integrations/{integrationID}", RequestMethod.PATCH, jsonObj, callback);
+            client.Rest.DoRequest($"/guilds/{id}/integrations/{integrationID}", RequestMethod.PATCH, jsonObj, callback);
         }
 
         public void DeleteGuildIntegration(DiscordClient client, Integration integration, Action callback = null) => DeleteGuildIntegration(client, integration.id, callback);
 
         public void DeleteGuildIntegration(DiscordClient client, string integrationID, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/integrations/{integrationID}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/integrations/{integrationID}", RequestMethod.DELETE, null, callback);
         }
 
         public void SyncGuildIntegration(DiscordClient client, Integration integration, Action callback = null) => SyncGuildIntegration(client, integration.id, callback);
 
         public void SyncGuildIntegration(DiscordClient client, string integrationID, Action callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/integrations/{integrationID}/sync", RequestMethod.POST, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/integrations/{integrationID}/sync", RequestMethod.POST, null, callback);
         }
 
         public void GetGuildEmbed(DiscordClient client, Action<GuildEmbed> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/embed", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/guilds/{id}/embed", RequestMethod.GET, null, callback);
         }
 
         public void ModifyGuildEmbed(DiscordClient client, GuildEmbed guildEmbed, Action<GuildEmbed> callback = null)
         {
-            client.REST.DoRequest($"/guilds/{id}/embed", RequestMethod.PATCH, guildEmbed, callback);
+            client.Rest.DoRequest($"/guilds/{id}/embed", RequestMethod.PATCH, guildEmbed, callback);
         }
     }
 }

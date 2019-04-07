@@ -24,7 +24,7 @@
 
         public static void ListVoiceRegions(DiscordClient client, Action<List<VoiceRegion>> callback = null)
         {
-            client.REST.DoRequest($"/voice/regions", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/voice/regions", RequestMethod.GET, null, callback);
         }
     }
 }

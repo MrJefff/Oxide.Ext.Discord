@@ -28,34 +28,34 @@
 
         public static void GetChannel(DiscordClient client, string channelID, Action<Channel> callback = null)
         {
-            client.REST.DoRequest($"/channels/{channelID}", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/channels/{channelID}", RequestMethod.GET, null, callback);
         }
 
         public void ModifyChannel(DiscordClient client, Channel newChannel, Action<Channel> callback = null)
         {
-            client.REST.DoRequest($"/channels/{id}", RequestMethod.PATCH, newChannel, callback);
+            client.Rest.DoRequest($"/channels/{id}", RequestMethod.PATCH, newChannel, callback);
         }
 
         public void DeleteChannel(DiscordClient client, Action<Channel> callback = null)
         {
-            client.REST.DoRequest($"/channels/{id}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/channels/{id}", RequestMethod.DELETE, null, callback);
         }
 
         public void GetChannelMessages(DiscordClient client, Action<List<Message>> callback = null)
         {
-            client.REST.DoRequest($"/channels/{id}/messages", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/channels/{id}/messages", RequestMethod.GET, null, callback);
         }
 
         public void GetChannelMessage(DiscordClient client, Message message, Action<Message> callback = null) => GetChannelMessage(client, message.id, callback);
 
         public void GetChannelMessage(DiscordClient client, string messageID, Action<Message> callback = null)
         {
-            client.REST.DoRequest($"/channels/{id}/messages/{messageID}", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/channels/{id}/messages/{messageID}", RequestMethod.GET, null, callback);
         }
 
         public void CreateMessage(DiscordClient client, Message message, Action<Message> callback = null)
         {
-            client.REST.DoRequest($"/channels/{id}/messages", RequestMethod.POST, message, callback);
+            client.Rest.DoRequest($"/channels/{id}/messages", RequestMethod.POST, message, callback);
         }
 
         public void CreateMessage(DiscordClient client, string message, Action<Message> callback = null)
@@ -65,7 +65,7 @@
                 content = message
             };
 
-            client.REST.DoRequest($"/channels/{id}/messages", RequestMethod.POST, createMessage, callback);
+            client.Rest.DoRequest($"/channels/{id}/messages", RequestMethod.POST, createMessage, callback);
         }
 
         public void CreateMessage(DiscordClient client, Embed embed, Action<Message> callback = null)
@@ -75,7 +75,7 @@
                 embed = embed
             };
 
-            client.REST.DoRequest($"/channels/{id}/messages", RequestMethod.POST, createMessage, callback);
+            client.Rest.DoRequest($"/channels/{id}/messages", RequestMethod.POST, createMessage, callback);
         }
 
         public void BulkDeleteMessages(DiscordClient client, string[] messageIds, Action callback = null)
@@ -85,7 +85,7 @@
                 { "messages", messageIds }
             };
 
-            client.REST.DoRequest($"/channels/{id}/messages/bulk-delete", RequestMethod.POST, jsonObj, callback);
+            client.Rest.DoRequest($"/channels/{id}/messages/bulk-delete", RequestMethod.POST, jsonObj, callback);
         }
 
         public void EditChannelPermissions(DiscordClient client, Overwrite overwrite, int? allow, int? deny, string type) => EditChannelPermissions(client, overwrite, allow, deny, type);
@@ -99,12 +99,12 @@
                 { "type", type }
             };
 
-            client.REST.DoRequest($"/channels/{id}/permissions/{overwriteID}", RequestMethod.PUT, jsonObj, callback);
+            client.Rest.DoRequest($"/channels/{id}/permissions/{overwriteID}", RequestMethod.PUT, jsonObj, callback);
         }
 
         public void GetChannelInvites(DiscordClient client, Action<List<Invite>> callback = null)
         {
-            client.REST.DoRequest($"/channels/{id}/invites", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest($"/channels/{id}/invites", RequestMethod.GET, null, callback);
         }
 
         public void CreateChannelInvite(DiscordClient client, Action<Invite> callback = null, int? max_age = 86400, int? max_uses = 0, bool temporary = false, bool unique = false)
@@ -117,24 +117,24 @@
                 { "unique", unique }
             };
 
-            client.REST.DoRequest<Invite>($"/channels/{id}/invites", RequestMethod.POST, jsonObj, callback);
+            client.Rest.DoRequest<Invite>($"/channels/{id}/invites", RequestMethod.POST, jsonObj, callback);
         }
 
         public void DeleteChannelPermission(DiscordClient client, Overwrite overwrite, Action callback) => DeleteChannelPermission(client, overwrite.id, callback);
 
         public void DeleteChannelPermission(DiscordClient client, string overwriteID, Action callback)
         {
-            client.REST.DoRequest($"/channels/{id}/permissions/{overwriteID}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/channels/{id}/permissions/{overwriteID}", RequestMethod.DELETE, null, callback);
         }
 
         public void TriggerTypingIndicator(DiscordClient client, Action callback)
         {
-            client.REST.DoRequest($"/channels/{id}/typing", RequestMethod.POST, null, callback);
+            client.Rest.DoRequest($"/channels/{id}/typing", RequestMethod.POST, null, callback);
         }
 
         public void GetPinnedMessages(DiscordClient client, Action<List<Message>> callback = null)
         {
-            client.REST.DoRequest<List<Message>>($"/channels/{id}/pins", RequestMethod.GET, null, callback);
+            client.Rest.DoRequest<List<Message>>($"/channels/{id}/pins", RequestMethod.GET, null, callback);
         }
 
         public void GroupDMAddRecipient(DiscordClient client, User user, string accessToken, Action callback = null) => GroupDMAddRecipient(client, user.id, accessToken, user.username, callback);
@@ -147,12 +147,12 @@
                 { "nick", nick }
             };
 
-            client.REST.DoRequest($"/channels/{id}/recipients/{userID}", RequestMethod.PUT, jsonObj, callback);
+            client.Rest.DoRequest($"/channels/{id}/recipients/{userID}", RequestMethod.PUT, jsonObj, callback);
         }
 
         public void GroupDMRemoveRecipient(DiscordClient client, string userID, Action callback)
         {
-            client.REST.DoRequest($"/channels/{id}/recipients/{userID}", RequestMethod.DELETE, null, callback);
+            client.Rest.DoRequest($"/channels/{id}/recipients/{userID}", RequestMethod.DELETE, null, callback);
         }
     }
 }

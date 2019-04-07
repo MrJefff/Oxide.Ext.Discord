@@ -29,7 +29,7 @@ namespace Oxide.Ext.Discord.WebSockets
 
         private WebSocket InitializeSocket()
         {
-            var socket = new WebSocket(_client.WSSURL);
+            var socket = new WebSocket(_client.WebSocketUrl);
             _listener = new SocketListener(_client, this);
 
             socket.OnOpen += _listener.SocketOpened;

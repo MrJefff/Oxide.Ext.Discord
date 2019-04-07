@@ -1,31 +1,28 @@
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using Newtonsoft.Json;
+using Oxide.Core;
+using Oxide.Core.Plugins;
+using Oxide.Ext.Discord.Attributes;
+using Oxide.Ext.Discord.DiscordEvents;
+using Oxide.Ext.Discord.DiscordObjects;
+using Oxide.Ext.Discord.Exceptions;
+using Oxide.Ext.Discord.Gateway;
+using Oxide.Ext.Discord.Helpers;
+using Oxide.Ext.Discord.REST;
+using Oxide.Ext.Discord.WebSockets;
 
 namespace Oxide.Ext.Discord
 {
-    using Newtonsoft.Json;
-    using Oxide.Core;
-    using Oxide.Core.Plugins;
-    using Oxide.Ext.Discord.Attributes;
-    using Oxide.Ext.Discord.DiscordEvents;
-    using Oxide.Ext.Discord.DiscordObjects;
-    using Oxide.Ext.Discord.Exceptions;
-    using Oxide.Ext.Discord.Gateway;
-    using Oxide.Ext.Discord.Helpers;
-    using Oxide.Ext.Discord.REST;
-    using Oxide.Ext.Discord.WebSockets;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
-    using System.Threading;
-
     public class DiscordClient
     {
-        public List<Plugin> Plugins { get; private set; } = new List<Plugin>();
+        public List<Plugin> Plugins { get; } = new List<Plugin>();
 
-        public RESTHandler REST { get; private set; }
+        public RESTHandler Rest { get; private set; }
 
-        public string WSSURL { get; private set; }
+        public string WebSocketUrl { get; private set; }
 
         public DiscordSettings Settings { get; set; } = new DiscordSettings();
 
@@ -61,13 +58,13 @@ namespace Oxide.Ext.Discord
                 throw new APIKeyException();
             }
 
-            _runThread = new Thread(new ThreadStart(() =>
+            _runThread = new Thread(() =>
             {
                 RegisterPlugin(plugin);
 
                 Settings = settings;
 
-                REST = new RESTHandler(Settings.ApiToken);
+                Rest = new RESTHandler(Settings.ApiToken);
 
                 if (_webSocket != null && _webSocket.IsAlive)
                 {
@@ -83,14 +80,14 @@ namespace Oxide.Ext.Discord
 
                 _webSocket.Connect();
 
-            }));
+            });
         }
 
         public void Disconnect()
         {
             ClientState = ClientState.DISCONNECTED;
             _webSocket?.Disconnect();
-            REST?.Shutdown();
+            Rest?.Shutdown();
             _heartbeat?.Abort();
             _runThread?.Abort();
         }
@@ -102,7 +99,7 @@ namespace Oxide.Ext.Discord
 
         public void UpdatePluginReference(Plugin plugin = null)
         {
-            List<Plugin> affectedPlugins = (plugin == null) ? Plugins : new List<Plugin>() { plugin };
+            List<Plugin> affectedPlugins = (plugin == null) ? Plugins : new List<Plugin> { plugin };
 
             foreach (Plugin pluginItem in affectedPlugins)
             {
@@ -172,14 +169,14 @@ namespace Oxide.Ext.Discord
             {
                 throw new ThreadRunningException(_heartbeat);
             }
-            _heartbeat = new Thread(new ThreadStart(() =>
+            _heartbeat = new Thread(() =>
             {
-                while (true)
+                while (_webSocket.IsAlive)
                 {
                     Thread.Sleep(heartbeatInterval);
                     SendHeartbeat();
                 }
-            }))
+            })
             {
                 Name = "Heartbeat-Thread"
             };
@@ -203,7 +200,7 @@ namespace Oxide.Ext.Discord
                     Interface.Oxide.LogDebug($"Got Gateway url: {fullUrl}");
                 }
 
-                WSSURL = fullUrl;
+                WebSocketUrl = fullUrl;
                 reset.Set();
             });
             reset.WaitOne();
@@ -216,10 +213,10 @@ namespace Oxide.Ext.Discord
             // Sent immediately after connecting. Opcode 2: Identify
             // Ref: https://discordapp.com/developers/docs/topics/gateway#identifying
 
-            Identify identify = new Identify()
+            Identify identify = new Identify
             {
                 Token = Settings.ApiToken,
-                Properties = new Properties()
+                Properties = new Properties
                 {
                     OS = "Oxide.Ext.Discord",
                     Browser = "Oxide.Ext.Discord",
@@ -227,10 +224,10 @@ namespace Oxide.Ext.Discord
                 },
                 Compress = false,
                 LargeThreshold = 50,
-                Shard = new List<int>() { 0, 1 }
+                Shard = new List<int> { 0, 1 }
             };
 
-            SPayload<Identify> opcode = new SPayload<Identify>()
+            SPayload<Identify> opcode = new SPayload<Identify>
             {
                 OpCode = OpCode.Identify,
                 Data = identify
@@ -243,14 +240,14 @@ namespace Oxide.Ext.Discord
         // TODO: Implement the usage of this event
         public void Resume()
         {
-            Resume resume = new Resume()
+            Resume resume = new Resume
             {
                 Sequence = Sequence,
                 SessionID = SessionId,
                 Token = string.Empty // What is this meant to be?
             };
 
-            SPayload<Resume> packet = new SPayload<Resume>()
+            SPayload<Resume> packet = new SPayload<Resume>
             {
                 OpCode = OpCode.Resume,
                 Data = resume
@@ -262,7 +259,7 @@ namespace Oxide.Ext.Discord
 
         internal void SendHeartbeat()
         {
-            SPayload<double> packet = new SPayload<double>()
+            SPayload<double> packet = new SPayload<double>
             {
                 OpCode = OpCode.Heartbeat,
                 Data = _lastHeartbeat
@@ -277,20 +274,20 @@ namespace Oxide.Ext.Discord
 
             if (Settings.Debugging)
             {
-                Interface.Oxide.LogDebug($"Heartbeat sent!");
+                Interface.Oxide.LogDebug("Heartbeat sent!");
             }
         }
 
         public void RequestGuildMembers(string query = "", int limit = 0)
         {
-            GuildMembersRequest requestGuildMembers = new GuildMembersRequest()
+            GuildMembersRequest requestGuildMembers = new GuildMembersRequest
             {
                 GuildID = DiscordServer.id,
                 Query = query,
                 Limit = limit
             };
 
-            SPayload<GuildMembersRequest> packet = new SPayload<GuildMembersRequest>()
+            SPayload<GuildMembersRequest> packet = new SPayload<GuildMembersRequest>
             {
                 OpCode = OpCode.RequestGuildMembers,
                 Data = requestGuildMembers
@@ -302,7 +299,7 @@ namespace Oxide.Ext.Discord
 
         public void UpdateVoiceState(string channelId, bool selfDeaf, bool selfMute)
         {
-            VoiceStateUpdate voiceState = new VoiceStateUpdate()
+            VoiceStateUpdate voiceState = new VoiceStateUpdate
             {
                 ChannelID = channelId,
                 GuildID = DiscordServer.id,
@@ -310,7 +307,7 @@ namespace Oxide.Ext.Discord
                 SelfMute = selfMute
             };
 
-            SPayload<VoiceStateUpdate> packet = new SPayload<VoiceStateUpdate>()
+            SPayload<VoiceStateUpdate> packet = new SPayload<VoiceStateUpdate>
             {
                 OpCode = OpCode.VoiceStateUpdate,
                 Data = voiceState
@@ -322,7 +319,7 @@ namespace Oxide.Ext.Discord
 
         public void UpdateStatus(Presence presence)
         {
-            SPayload<Presence> opcode = new SPayload<Presence>()
+            SPayload<Presence> opcode = new SPayload<Presence>
             {
                 OpCode = OpCode.StatusUpdate,
                 Data = presence

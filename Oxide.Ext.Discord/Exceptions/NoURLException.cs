@@ -4,7 +4,7 @@
 
     public class NoURLException : Exception
     {
-        public NoURLException() : base("Error! No WSSURL was found.")
+        public NoURLException() : base("Error! No WebSocketUrl was found.")
         {
         }
     }

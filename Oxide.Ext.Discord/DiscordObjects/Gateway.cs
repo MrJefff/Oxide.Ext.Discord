@@ -10,7 +10,7 @@
 
         public static void GetGateway(DiscordClient client, Action<Gateway> callback)
         {
-            client.REST.DoRequest("/gateway", REST.RequestMethod.GET, null, callback);
+            client.Rest.DoRequest("/gateway", REST.RequestMethod.GET, null, callback);
         }
     }
 }
