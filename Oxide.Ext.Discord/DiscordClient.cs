@@ -81,6 +81,7 @@ namespace Oxide.Ext.Discord
                 _webSocket.Connect();
 
             });
+            _runThread.Start();
         }
 
         public void Disconnect()

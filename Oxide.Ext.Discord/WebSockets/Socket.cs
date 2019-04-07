@@ -67,6 +67,7 @@ namespace Oxide.Ext.Discord.WebSockets
                 throw new SocketRunningException(_client);
             }
             _connectionThread = new Thread(OpenSocket);
+            _connectionThread.Start();
         }
 
         private void OpenSocket()
