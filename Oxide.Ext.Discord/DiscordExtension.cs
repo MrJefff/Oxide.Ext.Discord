@@ -1,10 +1,12 @@
 ﻿namespace Oxide.Ext.Discord
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Reflection;
     using Oxide.Core;
     using Oxide.Core.Extensions;
+    using Oxide.Core.Plugins;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
 
     public class DiscordExtension : Extension
     {
@@ -33,12 +35,24 @@
         public override void OnShutdown()
         {
             // new List prevents against InvalidOperationException
-            foreach (var client in new List<DiscordClient>(Discord.Clients))
+            foreach (DiscordClient client in new List<DiscordClient>(Discord.GetClients))
             {
                 Discord.CloseClient(client);
             }
 
             Interface.Oxide.LogInfo("[Discord Ext] Disconnected all clients - server shutdown.");
+        }
+
+        [HookMethod("OnPluginUnloaded")]
+        private void OnPluginUnloaded(Plugin plugin)
+        {
+            Console.WriteLine("Test");
+            foreach (DiscordClient client in Discord.GetClients)
+            {
+                if (client.Plugins.Count != 1 && !client.Plugins.Any(x => x.Name == plugin.Name || x.Filename == plugin.Filename)) continue;
+                Interface.Oxide.LogInfo("Disconnecting: Plugin \"{0}\" unloaded", plugin.Name);
+                client.Disconnect();
+            }
         }
     }
 }

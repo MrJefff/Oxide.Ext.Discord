@@ -125,9 +125,10 @@
             client.REST.DoRequest($"/guilds/{id}/members/{userID}", RequestMethod.GET, null, callback);
         }
 
-        public void ListGuildMembers(DiscordClient client, Action<List<GuildMember>> callback = null)
+        public void ListGuildMembers(DiscordClient client, Action<List<GuildMember>> callback = null, int limit = 1000, ulong after = 0)
         {
-            client.REST.DoRequest($"/guilds/{id}/members?limit=1000", RequestMethod.GET, null, callback);
+            string @params = string.Format("?limit={0}{1}", limit, after != 0 ? $"&after={after}" : "");
+            client.REST.DoRequest($"/guilds/{id}/members{@params}", RequestMethod.GET, null, callback);
         }
 
         public void AddGuildMember(DiscordClient client, GuildMember member, string accessToken, List<Role> roles, Action<GuildMember> callback = null) => this.AddGuildMember(client, member.user.id, accessToken, member.nick, roles, member.mute, member.deaf, callback);
@@ -198,16 +199,11 @@
             client.REST.DoRequest($"/guilds/{id}/bans", RequestMethod.GET, null, callback);
         }
 
-        public void CreateGuildBan(DiscordClient client, GuildMember member, int? deleteMessageDays, Action callback = null) => CreateGuildBan(client, member.user.id, deleteMessageDays, callback);
+        public void CreateGuildBan(DiscordClient client, GuildMember member, string reason, int? deleteMessageDays, Action callback = null) => CreateGuildBan(client, member.user.id, reason, deleteMessageDays, callback);
 
-        public void CreateGuildBan(DiscordClient client, string userID, int? deleteMessageDays, Action callback = null)
+        public void CreateGuildBan(DiscordClient client, string userID, string reason, int? deleteMessageDays, Action callback = null)
         {
-            var jsonObj = new Dictionary<string, object>()
-            {
-                { "delete-message-days", deleteMessageDays }
-            };
-
-            client.REST.DoRequest($"/guilds/{id}/bans/{userID}", RequestMethod.PUT, jsonObj, callback);
+            client.REST.DoRequest(string.Format("/guilds/{0}/bans/{1}?reason={2}&delete-message-days={3}", id, userID, reason, deleteMessageDays.Value), RequestMethod.PUT, null, callback);
         }
 
         public void RemoveGuildBan(DiscordClient client, string userID, Action callback = null)

@@ -8,13 +8,11 @@
     <Description>An Oxide extension for Discord.</Description>
     <RepositoryUrl>https://github.com/PsychoTea/Oxide.Ext.Discord</RepositoryUrl>
     <TargetFrameworks>net46;net45;net40;net35</TargetFrameworks>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net35' And '$(OS)' == 'Windows_NT'">C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v3.5\Profile\Client</FrameworkPathOverride>
-    <FrameworkPathOverride Condition="'$(TargetFramework)' == 'net35' And '$(OS)' == 'OSX'">/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/2.0-api</FrameworkPathOverride>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -116,6 +114,7 @@
     <Compile Include="DiscordObjects\ObjectPosition.cs" />
     <Compile Include="DiscordObjects\WebhookPayload.cs" />
     <Compile Include="Helpers\Time.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="REST\Bucket.cs" />
     <Compile Include="REST\GlobalRateLimit.cs" />
     <Compile Include="REST\Request.cs" />
@@ -125,9 +124,8 @@
     <Compile Include="DiscordObjects\Message.cs" />
     <Compile Include="DiscordSettings.cs" />
     <Compile Include="WebSockets\Socket.cs" />
-    <Compile Include="WebSockets\SocketListner.cs" />
+    <Compile Include="WebSockets\SocketListener.cs" />
     <Compile Include="DiscordClient.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Oxide.Core, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -161,6 +159,10 @@
   copy $(TargetPath) S:\Libraries\Documents\GitHub\LegionRust-Plugins\Oxide.Plugins-Legacy\ServerDlls
 )
 </PostBuildEvent>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Win32Resource />
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Oxide.Core" Version="2.0.*">

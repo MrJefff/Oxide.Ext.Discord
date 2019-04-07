@@ -7,7 +7,9 @@
 
     public class Discord
     {
-        public static List<DiscordClient> Clients { get; private set; } = new List<DiscordClient>();
+        private static List<DiscordClient> Clients { get; set; } = new List<DiscordClient>();
+
+        public static DiscordClient[] GetClients { get => Clients.ToArray(); }
 
         public static void CreateClient(Plugin plugin, string apiKey)
         {
@@ -47,7 +49,7 @@
             }
 
             // Find an existing DiscordClient and update it 
-            DiscordClient client = Clients.FirstOrDefault(x => x.Settings.ApiToken == settings.ApiToken);
+            var client = Clients.FirstOrDefault(x => x.Settings.ApiToken == settings.ApiToken);
             if (client != null)
             {
                 client.Plugins.Where(x => x.Title == plugin.Title).ToList().ForEach(x => client.Plugins.Remove(x));

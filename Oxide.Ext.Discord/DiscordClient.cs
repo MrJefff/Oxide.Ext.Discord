@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Oxide.Ext.Discord
 {
     using Newtonsoft.Json;
@@ -16,7 +18,6 @@ namespace Oxide.Ext.Discord
     using System.Linq;
     using System.Reflection;
     using System.Threading;
-    using System.Timers;
 
     public class DiscordClient
     {
@@ -32,17 +33,18 @@ namespace Oxide.Ext.Discord
 
         public int Sequence;
 
-        public string SessionID;
+        public string SessionId;
 
         private Socket _webSocket;
 
         private Thread _heartbeat;
+        private Thread _runThread;
 
         private double _lastHeartbeat;
 
-        public ClientState ClientState { get; internal set; }
+        public ClientState ClientState { get; private set; }
 
-        public void Initialize(Plugin plugin, DiscordSettings settings)
+        public void Initialize(Plugin plugin, DiscordSettings settings, bool _override = false)
         {
             if (plugin == null)
             {
@@ -59,36 +61,38 @@ namespace Oxide.Ext.Discord
                 throw new APIKeyException();
             }
 
-            RegisterPlugin(plugin);
-
-            Settings = settings;
-
-            REST = new RESTHandler(Settings.ApiToken);
-
-            if (_webSocket != null && _webSocket.IsAlive)
+            _runThread = new Thread(new ThreadStart(() =>
             {
-                throw new SocketRunningException(this);
-            }
+                RegisterPlugin(plugin);
 
-            if (!string.IsNullOrEmpty(WSSURL))
-            {
+                Settings = settings;
+
+                REST = new RESTHandler(Settings.ApiToken);
+
+                if (_webSocket != null && _webSocket.IsAlive)
+                {
+                    throw new SocketRunningException(this);
+                }
+
+                GetUrl();
+
+                if (_webSocket == null)
+                {
+                    _webSocket = new Socket(this);
+                }
+
                 _webSocket.Connect();
-                return;
-            }
 
-            GetURL(url =>
-            {
-                _webSocket = new Socket(this);
-                _webSocket.Connect();
-            });
+            }));
         }
 
         public void Disconnect()
         {
             ClientState = ClientState.DISCONNECTED;
-            _heartbeat.Abort();
             _webSocket?.Disconnect();
             REST?.Shutdown();
+            _heartbeat?.Abort();
+            _runThread?.Abort();
         }
         public void Connect()
         {
@@ -154,9 +158,17 @@ namespace Oxide.Ext.Discord
 
         public string GetPluginNames(string delimiter = ", ") => string.Join(delimiter, Plugins.Select(x => x.Name).ToArray());
 
+        public void StopHeartbeatThread()
+        {
+            if (_heartbeat != null)
+            {
+                _heartbeat.Abort();
+                _heartbeat = null;
+            }
+        }
         public void StartHeartbeatThread(int heartbeatInterval)
         {
-            if (_heartbeat.IsAlive)
+            if (_heartbeat != null && _heartbeat.IsAlive)
             {
                 throw new ThreadRunningException(_heartbeat);
             }
@@ -164,30 +176,37 @@ namespace Oxide.Ext.Discord
             {
                 while (true)
                 {
-                    Thread.Sleep(heartbeatInterval * 1000);
+                    Thread.Sleep(heartbeatInterval);
                     SendHeartbeat();
                 }
-            }));
-            _heartbeat.Name = "Heartbeat-Thread";
+            }))
+            {
+                Name = "Heartbeat-Thread"
+            };
             _heartbeat.Start();
+            if (Settings.Debugging)
+            {
+                Interface.Oxide.LogDebug(_heartbeat.Name);
+            }
         }
 
-        private void GetURL(Action<string> callback)
+        private void GetUrl()
         {
-            DiscordObjects.Gateway.GetGateway(this, (gateway) =>
+            var reset = new AutoResetEvent(false);
+            DiscordObjects.Gateway.GetGateway(this, gateway =>
             {
                 // Example: wss://gateway.discord.gg/?v=6&encoding=json
-                string fullURL = $"{gateway.URL}/?{Gateway.Connect.Serialize()}";
+                var fullUrl = $"{gateway.URL}/?{Gateway.Connect.Serialize()}";
 
                 if (Settings.Debugging)
                 {
-                    Interface.Oxide.LogDebug($"Got Gateway url: {fullURL}");
+                    Interface.Oxide.LogDebug($"Got Gateway url: {fullUrl}");
                 }
 
-                WSSURL = fullURL;
-
-                callback.Invoke(fullURL);
+                WSSURL = fullUrl;
+                reset.Set();
             });
+            reset.WaitOne();
         }
 
         #region Discord Events
@@ -227,7 +246,7 @@ namespace Oxide.Ext.Discord
             Resume resume = new Resume()
             {
                 Sequence = Sequence,
-                SessionID = SessionID,
+                SessionID = SessionId,
                 Token = string.Empty // What is this meant to be?
             };
 

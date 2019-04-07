@@ -1,16 +1,19 @@
-﻿namespace Oxide.Ext.Discord.REST
+﻿using System.Threading;
+
+namespace Oxide.Ext.Discord.REST
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     public class RESTHandler
     {
-        private readonly List<Bucket> buckets = new List<Bucket>();
+        private readonly List<Bucket> _buckets = new List<Bucket>();
 
         private readonly string apiKey;
 
-        public Dictionary<string, string> Headers { get; set; }
+        private Dictionary<string, string> Headers { get; set; }
 
         public RESTHandler(string apiKey)
         {
@@ -25,7 +28,7 @@
 
         public void Shutdown()
         {
-            buckets.ForEach(x =>
+            _buckets.ForEach(x =>
             {
                 x.Disposed = true;
                 x.Close();
@@ -36,6 +39,7 @@
         {
             CreateRequest(method, url, Headers, data, response => callback?.Invoke());
         }
+
 
         public void DoRequest<T>(string url, RequestMethod method, object data, Action<T> callback)
         {
@@ -49,12 +53,12 @@
         {
             // this is bad I know, but I'm way too fucking lazy to go 
             // and rewrite every single fucking REST request call
-            string[] parts = url.Split('/');
+            var parts = url.Split('/');
 
-            string route = string.Join("/", parts.Take(3).ToArray());
+            var route = string.Join("/", parts.Take(3).ToArray());
             route = route.TrimEnd('/');
 
-            string endpoint = "/" + string.Join("/", parts.Skip(3).ToArray());
+            var endpoint = "/" + string.Join("/", parts.Skip(3).ToArray());
             endpoint = endpoint.TrimEnd('/');
 
             var request = new Request(method, route, endpoint, headers, data, callback);
@@ -63,12 +67,12 @@
 
         private void BucketRequest(Request request)
         {
-            foreach (var item in new List<Bucket>(buckets).Where(x => x.Disposed))
+            foreach (var item in new List<Bucket>(_buckets).Where(x => x.Disposed))
             {
-                buckets.Remove(item);
+                _buckets.Remove(item);
             }
 
-            var bucket = buckets.SingleOrDefault(x => x.Method == request.Method &&
+            var bucket = _buckets.SingleOrDefault(x => x.Method == request.Method &&
                                                       x.Route == request.Route);
 
             if (bucket != null)
@@ -78,7 +82,7 @@
             }
 
             var newBucket = new Bucket(request.Method, request.Route);
-            buckets.Add(newBucket);
+            _buckets.Add(newBucket);
 
             newBucket.Queue(request);
         }

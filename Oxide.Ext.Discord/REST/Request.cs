@@ -54,7 +54,7 @@
             InProgress = true;
             StartTime = DateTime.UtcNow;
 
-            WebRequest req = WebRequest.Create(RequestURL);
+            var req = WebRequest.Create(RequestURL);
             req.Method = Method.ToString();
             req.ContentType = "application/json";
             req.Timeout = 5000;

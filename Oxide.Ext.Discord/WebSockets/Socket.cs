@@ -1,69 +1,81 @@
-﻿namespace Oxide.Ext.Discord.WebSockets
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace Oxide.Ext.Discord.WebSockets
 {
-    using Oxide.Ext.Discord.Exceptions;
+    using Exceptions;
     using System;
     using System.Threading;
     using WebSocketSharp;
 
     public class Socket
     {
-        private readonly DiscordClient client;
+        private readonly DiscordClient _client;
 
-        private readonly WebSocket socket;
+        private readonly WebSocket _socket;
 
-        private SocketListner listner;
+        private SocketListener _listener;
 
-        private int reconnectAttempts = 0;
+        private int _reconnectAttempts;
+
+        private Thread _connectionThread;
+
+        public int SleepTime;
 
         public Socket(DiscordClient client)
         {
-            this.client = client;
-            socket = InitializeSocket();
+            _client = client;
+            _socket = InitializeSocket();
         }
 
-        protected internal WebSocket InitializeSocket()
+        private WebSocket InitializeSocket()
         {
-            WebSocket socket = new WebSocket(client.WSSURL);
-            listner = new SocketListner(client, this);
+            var socket = new WebSocket(_client.WSSURL);
+            _listener = new SocketListener(_client, this);
 
-            socket.OnOpen += listner.SocketOpened;
-            socket.OnClose += listner.SocketClosed;
-            socket.OnError += listner.SocketErrored;
-            socket.OnMessage += listner.SocketMessage;
+            socket.OnOpen += _listener.SocketOpened;
+            socket.OnClose += _listener.SocketClosed;
+            socket.OnError += _listener.SocketError;
+            socket.OnMessage += _listener.SocketMessage;
 
             return socket;
         }
 
-
-
-        public object _lock = new object();
-
         internal void Reconnect()
         {
-            if (IsClosed)
+            Disconnect();
+
+            if (_socket.ReadyState == WebSocketState.Closed)
             {
                 throw new SocketReconnectException();
             }
 
-            int time = (reconnectAttempts > 100 ? 60 : 3) * 1000;
+            SleepTime = (_reconnectAttempts > 100 ? 60 : 3) * 1000;
 
-            reconnectAttempts++;
+            _reconnectAttempts++;
 
-            Thread thread = new Thread(() =>
-            {
-                Thread.Sleep(time);
-                Connect();
-            });
-            thread.Start();
+            Connect();
         }
 
         public void Connect()
         {
-            if (socket?.ReadyState == WebSocketState.Open)
+            if (_connectionThread != null && _connectionThread.IsAlive)
             {
-                throw new SocketRunningException(client);
+                throw new Exception("Connect thread already alive!");
             }
-            socket.ConnectAsync();
+            if (_socket?.ReadyState == WebSocketState.Open)
+            {
+                throw new SocketRunningException(_client);
+            }
+            _connectionThread = new Thread(OpenSocket);
+        }
+
+        private void OpenSocket()
+        {
+            if (SleepTime > 0)
+            {
+                Thread.Sleep(SleepTime);
+            }
+            _socket.Connect();
         }
 
         public void Disconnect()
@@ -72,19 +84,24 @@
             {
                 return;
             }
+            _client.StopHeartbeatThread();
+            _socket?.Close();
+        }
 
-            socket?.CloseAsync();
+        public void Shutdown()
+        {
+            Disconnect();
         }
 
         public void Send(string message, Action<bool> completed = null)
         {
-            socket?.SendAsync(message, completed);
+            _socket?.SendAsync(message, completed);
         }
 
-        public bool IsAlive => socket?.IsAlive ?? false;
+        public bool IsAlive => _socket?.IsAlive ?? false;
 
-        public bool IsClosing => socket?.ReadyState == WebSocketState.Closing;
+        public bool IsClosing => _socket?.ReadyState == WebSocketState.Closing;
 
-        public bool IsClosed => socket?.ReadyState == WebSocketState.Closed;
+        public bool IsClosed => _socket?.ReadyState == WebSocketState.Closed;
     }
 }

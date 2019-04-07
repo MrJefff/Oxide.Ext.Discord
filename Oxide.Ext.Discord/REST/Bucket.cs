@@ -1,6 +1,6 @@
 ﻿namespace Oxide.Ext.Discord.REST
 {
-    using Oxide.Ext.Discord.Helpers;
+    using Helpers;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -90,7 +90,7 @@
                 return;
             }
 
-            Request nextItem = this.First();
+            var nextItem = this.First();
             nextItem.Fire(this);
         }
 
