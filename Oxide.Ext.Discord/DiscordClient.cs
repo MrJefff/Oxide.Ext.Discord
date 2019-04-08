@@ -214,7 +214,7 @@ namespace Oxide.Ext.Discord
             // Sent immediately after connecting. Opcode 2: Identify
             // Ref: https://discordapp.com/developers/docs/topics/gateway#identifying
 
-            Identify identify = new Identify
+            var identify = new Identify
             {
                 Token = Settings.ApiToken,
                 Properties = new Properties
@@ -228,12 +228,13 @@ namespace Oxide.Ext.Discord
                 Shard = new List<int> { 0, 1 }
             };
 
-            SPayload<Identify> opcode = new SPayload<Identify>
+            var opcode = new SPayload<Identify>
             {
                 OpCode = OpCode.Identify,
                 Data = identify
             };
-            string payload = JsonConvert.SerializeObject(opcode);
+
+            var payload = JsonConvert.SerializeObject(opcode);
 
             _webSocket.Send(payload);
         }
@@ -241,14 +242,14 @@ namespace Oxide.Ext.Discord
         // TODO: Implement the usage of this event
         public void Resume()
         {
-            Resume resume = new Resume
+            var resume = new Resume
             {
                 Sequence = Sequence,
                 SessionID = SessionId,
-                Token = string.Empty // What is this meant to be?
+                Token = Settings.ApiToken
             };
 
-            SPayload<Resume> packet = new SPayload<Resume>
+            var packet = new SPayload<Resume>
             {
                 OpCode = OpCode.Resume,
                 Data = resume

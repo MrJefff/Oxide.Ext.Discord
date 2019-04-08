@@ -107,7 +107,7 @@ namespace Oxide.Ext.Discord.WebSockets
                                     _client.UpdatePluginReference();
                                     _client.CallHook("DiscordSocket_Initialized");
 
-                                    Ready ready = payload.ToObject<Ready>();
+                                    var ready = payload.ToObject<Ready>();
 
                                     if (ready.Guilds.Count > 1)
                                     {
@@ -122,6 +122,7 @@ namespace Oxide.Ext.Discord.WebSockets
 
                                     _client.DiscordServer = ready.Guilds.FirstOrDefault();
                                     _client.SessionId = ready.SessionID;
+                                    _webSocket.ShouldResume = true;
 
                                     _client.CallHook("Discord_Ready", null, ready);
                                     break;
@@ -457,6 +458,7 @@ namespace Oxide.Ext.Discord.WebSockets
                 case OpCode.InvalidSession:
                     {
                         Interface.Oxide.LogInfo("[DiscordExt] Invalid Session ID opcode recieved!");
+                        _webSocket.ShouldResume = false;
                         break;
                     }
 
@@ -466,8 +468,14 @@ namespace Oxide.Ext.Discord.WebSockets
                         Hello hello = payload.ToObject<Hello>();
                         _client.StartHeartbeatThread(hello.HeartbeatInterval);
 
-                        // Client should now perform identification
-                        _client.Identify();
+                        if (_webSocket.ShouldResume)
+                        {
+                            _client.Resume();
+                        }
+                        else
+                        {
+                            _client.Identify();
+                        }
                         break;
                     }
 

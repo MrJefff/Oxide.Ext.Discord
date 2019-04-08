@@ -21,6 +21,8 @@ namespace Oxide.Ext.Discord.WebSockets
 
         public int SleepTime;
 
+        public bool ShouldResume = false;
+
         public Socket(DiscordClient client)
         {
             _client = client;
