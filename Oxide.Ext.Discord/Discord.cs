@@ -2,14 +2,14 @@
 {
     using System.Collections.Generic;
     using System.Linq;
-    using Oxide.Core.Plugins;
-    using Oxide.Ext.Discord.Exceptions;
+    using Core.Plugins;
+    using Exceptions;
 
     public class Discord
     {
         private static List<DiscordClient> Clients { get; set; } = new List<DiscordClient>();
 
-        public static DiscordClient[] GetClients { get => Clients.ToArray(); }
+        public static IEnumerable<DiscordClient> GetClients => Clients;
 
         public static void CreateClient(Plugin plugin, string apiKey)
         {
@@ -23,7 +23,7 @@
                 throw new APIKeyException();
             }
 
-            DiscordSettings settings = new DiscordSettings()
+            var settings = new DiscordSettings()
             {
                 ApiToken = apiKey
             };
@@ -52,9 +52,9 @@
             var client = Clients.FirstOrDefault(x => x.Settings.ApiToken == settings.ApiToken);
             if (client != null)
             {
-                client.Plugins.Where(x => x.Title == plugin.Title).ToList().ForEach(x => client.Plugins.Remove(x));
+                client.Plugins.Where(x => x.Title == plugin.Title).ToList().ForEach(x => client.RemovePlugin(x));
 
-                client.Plugins.Remove(plugin);
+                client.RemovePlugin(plugin);
                 client.RegisterPlugin(plugin);
                 client.UpdatePluginReference(plugin);
                 client.Settings = settings;

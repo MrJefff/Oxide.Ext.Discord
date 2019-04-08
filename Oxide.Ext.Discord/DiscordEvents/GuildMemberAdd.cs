@@ -1,6 +1,6 @@
 ﻿namespace Oxide.Ext.Discord.DiscordEvents
 {
-    using Oxide.Ext.Discord.DiscordObjects;
+    using DiscordObjects;
 
     public class GuildMemberAdd : GuildMember
     {

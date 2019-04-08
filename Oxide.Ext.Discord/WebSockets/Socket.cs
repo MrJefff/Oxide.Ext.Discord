@@ -23,6 +23,8 @@ namespace Oxide.Ext.Discord.WebSockets
 
         public bool ShouldResume = false;
 
+        public bool Initialized = false;
+
         public Socket(DiscordClient client)
         {
             _client = client;

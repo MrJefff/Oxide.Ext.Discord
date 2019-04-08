@@ -1,16 +1,16 @@
-﻿namespace Oxide.Ext.Discord
-{
-    using Oxide.Core;
-    using Oxide.Core.Extensions;
-    using Oxide.Core.Plugins;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Oxide.Core;
+using Oxide.Core.Extensions;
+using Oxide.Core.Plugins;
 
+namespace Oxide.Ext.Discord
+{
     public class DiscordExtension : Extension
     {
-        internal static readonly Version AssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        private static readonly Version AssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
 
         public DiscordExtension(ExtensionManager manager) : base(manager)
         {
@@ -35,7 +35,7 @@
         public override void OnShutdown()
         {
             // new List prevents against InvalidOperationException
-            foreach (DiscordClient client in new List<DiscordClient>(Discord.GetClients))
+            foreach (var client in new List<DiscordClient>(Discord.GetClients))
             {
                 Discord.CloseClient(client);
             }
@@ -46,10 +46,9 @@
         [HookMethod("OnPluginUnloaded")]
         private void OnPluginUnloaded(Plugin plugin)
         {
-            Console.WriteLine("Test");
-            foreach (DiscordClient client in Discord.GetClients)
+            foreach (var client in Discord.GetClients)
             {
-                if (client.Plugins.Count != 1 && !client.Plugins.Any(x => x.Name == plugin.Name || x.Filename == plugin.Filename)) continue;
+                if (client.Plugins.Count() != 1 && !client.Plugins.Any(x => x.Name == plugin.Name || x.Filename == plugin.Filename)) continue;
                 Interface.Oxide.LogInfo("Disconnecting: Plugin \"{0}\" unloaded", plugin.Name);
                 client.Disconnect();
             }

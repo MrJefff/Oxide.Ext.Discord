@@ -18,7 +18,10 @@ namespace Oxide.Ext.Discord
 {
     public class DiscordClient
     {
-        public List<Plugin> Plugins { get; } = new List<Plugin>();
+        private readonly List<Plugin> _plugins = new List<Plugin>();
+        private Dictionary<string, Guild> _guilds = new Dictionary<string, Guild>();
+        public IEnumerable<Guild> Guilds => _guilds.Values;
+        public IEnumerable<Plugin> Plugins => _plugins;
 
         public RESTHandler Rest { get; private set; }
 
@@ -26,11 +29,9 @@ namespace Oxide.Ext.Discord
 
         public DiscordSettings Settings { get; set; } = new DiscordSettings();
 
-        public Guild DiscordServer { get; set; }
-
         public int Sequence;
 
-        public string SessionId;
+        private string _sessionId;
 
         private Socket _webSocket;
 
@@ -84,6 +85,162 @@ namespace Oxide.Ext.Discord
             _runThread.Start();
         }
 
+        public void Ready(Ready ready)
+        {
+            if (!_webSocket.Initialized)
+            {
+                _guilds.Clear();
+
+                foreach (var guild in ready.Guilds)
+                {
+                    _guilds.Add(guild.id, guild);
+                }
+                _sessionId = ready.SessionID;
+                _webSocket.ShouldResume = true;
+            }
+
+            _webSocket.Initialized = true;
+        }
+
+        internal void RemovePlugin(Plugin plugin)
+        {
+            _plugins.Remove(plugin);
+        }
+
+        internal void AddGuild(Guild guild)
+        {
+            _guilds.Add(guild.id, guild);
+        }
+
+        internal void AddChannel(Channel channel)
+        {
+            if (string.IsNullOrEmpty(channel.GuildId))
+            {
+                return;
+            }
+            _guilds[channel.GuildId].channels.Add(channel);
+        }
+        internal void RemoveChannel(Channel channel)
+        {
+            if (string.IsNullOrEmpty(channel.GuildId))
+            {
+                return;
+            }
+            _guilds[channel.GuildId].channels.Remove(channel);
+        }
+        internal Channel UpdateChannel(Channel channel)
+        {
+            if (string.IsNullOrEmpty(channel.GuildId))
+            {
+                return null;
+            }
+            var channelPrevious = _guilds[channel.GuildId].channels.FirstOrDefault(x => x.id == channel.id);
+
+            if (channelPrevious != null)
+            {
+                RemoveChannel(channelPrevious);
+            }
+
+            AddChannel(channel);
+            return channelPrevious;
+        }
+
+        internal void AddMember(GuildMemberAdd member)
+        {
+            if (string.IsNullOrEmpty(member.guild_id))
+            {
+                return;
+            }
+            _guilds[member.guild_id].members.Add(member);
+        }
+
+        internal void RemoveMember(GuildMemberRemove member)
+        {
+            if (string.IsNullOrEmpty(member.guild_id))
+            {
+                return;
+            }
+            _guilds[member.guild_id].members.Remove(member);
+        }
+        internal GuildMember UpdateMember(GuildMemberUpdate member)
+        {
+            if (string.IsNullOrEmpty(member.guild_id))
+            {
+                return null;
+            }
+
+            var previousMember = _guilds[member.guild_id].members.First(x => x.user.id == member.user.id);
+            if (previousMember != null)
+            {
+                _guilds[member.guild_id].members.Remove(previousMember);
+            }
+            _guilds[member.guild_id].members.Add(member);
+            return previousMember;
+        }
+
+        internal void AddRole(GuildRoleCreate role)
+        {
+            if (string.IsNullOrEmpty(role.guild_id))
+            {
+                return;
+            }
+            _guilds[role.guild_id].roles.Add(role.role);
+        }
+
+        internal Role RemoveRole(GuildRoleDelete role)
+        {
+            if (string.IsNullOrEmpty(role.guild_id))
+            {
+                return null;
+            }
+            var removeRole = _guilds[role.guild_id].roles.First(x => x.id == role.role_id);
+            if (removeRole != null)
+            {
+                _guilds[role.guild_id].roles.Remove(removeRole);
+                return removeRole;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        internal Role UpdateRole(GuildRoleUpdate role)
+        {
+            if (string.IsNullOrEmpty(role.guild_id))
+            {
+                return null;
+            }
+
+            var previousRole = _guilds[role.guild_id].roles.First(x => x.id == role.role.id);
+            if (previousRole != null)
+            {
+                _guilds[previousRole.guild_id].roles.Remove(previousRole);
+            }
+            _guilds[role.guild_id].roles.Add(role.role);
+            return previousRole;
+        }
+
+        internal void UpdateUserPresence(PresenceUpdate update)
+        {
+            var previousMember = _guilds[update.guild_id].members.First(x => x.user.id == update.user.id);
+            if (previousMember != null)
+            {
+                previousMember.user = update.user;
+            }
+        }
+        internal void UpdateUser(User user)
+        {
+            foreach (var guild in _guilds.Values)
+            {
+                var member = guild.members.First(x => x.user.id == user.id);
+                if (member != null)
+                {
+                    member.user = user;
+                }
+            }
+        }
+
+
         public void Disconnect()
         {
             ClientState = ClientState.DISCONNECTED;
@@ -92,19 +249,14 @@ namespace Oxide.Ext.Discord
             _heartbeat?.Abort();
             _runThread?.Abort();
         }
-        public void Connect()
-        {
-            ClientState = ClientState.CONNECTED;
-            _webSocket.Connect();
-        }
 
         public void UpdatePluginReference(Plugin plugin = null)
         {
-            List<Plugin> affectedPlugins = (plugin == null) ? Plugins : new List<Plugin> { plugin };
+            var affectedPlugins = plugin == null ? _plugins : new List<Plugin> { plugin };
 
-            foreach (Plugin pluginItem in affectedPlugins)
+            foreach (var pluginItem in affectedPlugins)
             {
-                foreach (FieldInfo field in pluginItem.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
+                foreach (var field in pluginItem.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
                 {
                     if (field.GetCustomAttributes(typeof(DiscordClientAttribute), true).Any())
                     {
@@ -116,10 +268,10 @@ namespace Oxide.Ext.Discord
 
         public void RegisterPlugin(Plugin plugin)
         {
-            IEnumerable<Plugin> search = Plugins.Where(x => x.Title == plugin.Title);
-            search.ToList().ForEach(x => Plugins.Remove(x));
+            var search = Plugins.Where(x => x.Title == plugin.Title);
+            search.ToList().ForEach(x => _plugins.Remove(x));
 
-            Plugins.Add(plugin);
+            _plugins.Add(plugin);
         }
 
         public object CallHook(string hookname, params object[] args) => CallHook(hookname, null, args);
@@ -194,7 +346,7 @@ namespace Oxide.Ext.Discord
             DiscordObjects.Gateway.GetGateway(this, gateway =>
             {
                 // Example: wss://gateway.discord.gg/?v=6&encoding=json
-                var fullUrl = $"{gateway.URL}/?{Gateway.Connect.Serialize()}";
+                var fullUrl = $"{gateway.URL}/?{Connect.Serialize()}";
 
                 if (Settings.Debugging)
                 {
@@ -245,7 +397,7 @@ namespace Oxide.Ext.Discord
             var resume = new Resume
             {
                 Sequence = Sequence,
-                SessionID = SessionId,
+                SessionID = _sessionId,
                 Token = Settings.ApiToken
             };
 
@@ -280,11 +432,11 @@ namespace Oxide.Ext.Discord
             }
         }
 
-        public void RequestGuildMembers(string query = "", int limit = 0)
+        public void RequestGuildMembers(string guildId, string query = "", int limit = 0)
         {
             GuildMembersRequest requestGuildMembers = new GuildMembersRequest
             {
-                GuildID = DiscordServer.id,
+                GuildID = guildId,
                 Query = query,
                 Limit = limit
             };
@@ -299,12 +451,12 @@ namespace Oxide.Ext.Discord
             _webSocket.Send(payload);
         }
 
-        public void UpdateVoiceState(string channelId, bool selfDeaf, bool selfMute)
+        public void UpdateVoiceState(string guildId, string channelId, bool selfDeaf, bool selfMute)
         {
             VoiceStateUpdate voiceState = new VoiceStateUpdate
             {
                 ChannelID = channelId,
-                GuildID = DiscordServer.id,
+                GuildID = guildId,
                 SelfDeaf = selfDeaf,
                 SelfMute = selfMute
             };

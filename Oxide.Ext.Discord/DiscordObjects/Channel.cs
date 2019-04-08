@@ -1,4 +1,6 @@
-﻿namespace Oxide.Ext.Discord.DiscordObjects
+﻿using Newtonsoft.Json;
+
+namespace Oxide.Ext.Discord.DiscordObjects
 {
     using System;
     using System.Collections.Generic;
@@ -25,6 +27,9 @@
         public List<User> recipients { get; set; }
 
         public string icon { get; set; }
+
+        [JsonProperty("guild_id")]
+        public readonly string GuildId;
 
         public static void GetChannel(DiscordClient client, string channelID, Action<Channel> callback = null)
         {
